@@ -1,4 +1,3 @@
-followers/
-followers_dict.pkl
+*.csv
 .idea
 
