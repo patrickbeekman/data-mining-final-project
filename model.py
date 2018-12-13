@@ -15,7 +15,8 @@ class Model:
 
     def __init__(self):
         self.rides = pd.read_csv("trip.csv", error_bad_lines=False)
-        self.weather = pd.read_csv("weather_no_seasonality.csv", na_values=['-'])
+        # self.weather = pd.read_csv("weather_no_seasonality.csv", na_values=['-'])
+        self.weather = pd.read_csv("weather.csv", na_values=['-'])
         self.clean_ride_data()
         self.X = None
         self.y = None
@@ -30,17 +31,17 @@ class Model:
         self.rides = self.rides[self.rides['to_station_id'] != 'Pronto shop 2']
         self.rides = self.rides[self.rides['from_station_id'] != '8D OPS 02']
         self.rides = self.rides[self.rides['to_station_id'] != '8D OPS 02']
-        self.weather['Date'] = self.weather['Date'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
-        self.weather.drop(['Unnamed: 0', 'Mean_Temperature_F', 'Min_TemperatureF'], axis=1, inplace=True)
+        # self.weather['Date'] = self.weather['Date'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
+        # self.weather.drop(['Unnamed: 0', 'Mean_Temperature_F', 'Min_TemperatureF'], axis=1, inplace=True)
 
-        # self.weather['Date'] = self.weather['Date'].apply(lambda x: datetime.strptime(x, "%m/%d/%Y"))
-        # self.weather.drop(
-        #     ['Max_Temperature_F', 'Max_Dew_Point_F', 'MeanDew_Point_F', 'Min_Dewpoint_F', 'Max_Humidity',
-        #      'Min_Humidity', 'Max_Sea_Level_Pressure_In',
-        #      'Mean_Sea_Level_Pressure_In', 'Min_Sea_Level_Pressure_In',
-        #      'Max_Visibility_Miles', 'Mean_Visibility_Miles', 'Min_Visibility_Miles',
-        #      'Max_Wind_Speed_MPH', 'Max_Gust_Speed_MPH', 'Events'], axis=1, inplace=True)
-        # self.weather.interpolate(inplace=True)
+        self.weather['Date'] = self.weather['Date'].apply(lambda x: datetime.strptime(x, "%m/%d/%Y"))
+        self.weather.drop(
+            ['Max_Temperature_F', 'Max_Dew_Point_F', 'MeanDew_Point_F', 'Min_Dewpoint_F', 'Max_Humidity',
+             'Min_Humidity', 'Max_Sea_Level_Pressure_In',
+             'Mean_Sea_Level_Pressure_In', 'Min_Sea_Level_Pressure_In',
+             'Max_Visibility_Miles', 'Mean_Visibility_Miles', 'Min_Visibility_Miles',
+             'Max_Wind_Speed_MPH', 'Max_Gust_Speed_MPH', 'Events', 'Min_TemperatureF'], axis=1, inplace=True)
+        self.weather.interpolate(inplace=True)
 
     def set_X_Y(self):
         self.y = self.rides.groupby('Date')['tripduration'].sum()
@@ -86,6 +87,14 @@ Degree 1 : MSE_avg 51319860032.8  Score_avg: 0.463936116689
 Degree 2 : MSE_avg 116035394689.0  Score_avg: -0.198514127468
 Degree 3 : MSE_avg 163533390026.0  Score_avg: -0.754070678516
 Degree 4 : MSE_avg 8.84053057243e+12  Score_avg: -97.667238757
+'''
+
+'''
+Without removing Seasonality, just removed min_temperature
+Degree 0 : MSE_avg 96892584964.2  Score_avg: -0.00846191037771
+Degree 1 : MSE_avg 51140751164.1  Score_avg: 0.465813106711
+Degree 2 : MSE_avg 46343942039.2  Score_avg: 0.514161953966
+Degree 3 : MSE_avg 120147181888.0  Score_avg: -0.207333447544
 '''
 
 '''
