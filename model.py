@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
@@ -57,7 +58,7 @@ class Model:
         pass
 
 
-    def modeling(self):
+    def model_testing(self):
         X_train_big, X_test_big, y_train_big, y_test_big = train_test_split(self.X, self.y, test_size=.3, random_state=42)
 
         kf = KFold(n_splits=5, random_state=42, shuffle=True)
@@ -78,6 +79,24 @@ class Model:
                 errors.append(mean_squared_error(y_test, predicted))
                 scores.append(model.score(X_test, y_test))
             print("Degree", degree, ": MSE_avg", np.mean(errors), " Score_avg:", np.mean(scores))
+
+    # Degree two polynomial
+    def make_model_and_test(self):
+        print("Making model!")
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=.3, random_state=42)
+        model = make_pipeline(PolynomialFeatures(degree=2), LinearRegression())
+        model.fit(X_train, y_train)
+        predicted = model.predict(X_test)
+        output_str = "MSE: " + str(mean_squared_error(y_test, predicted)) + "\nR^2: " + str(model.score(X_test, y_test))
+        print(output_str)
+        plt.scatter(y_test, predicted)
+        plt.title("Actual vs Predicted trip_duration")
+        plt.xlabel("Actual")
+        plt.ylabel("Predicted")
+        plt.text(1500000, .05, output_str)
+        plt.show()
+
+
 
 
 '''
@@ -106,4 +125,5 @@ Degree 3 : MSE_avg 71670877991.4  Score_avg: 0.212606155121
 '''
 
 model = Model()
-model.modeling()
+model.model_testing()
+model.make_model_and_test()
