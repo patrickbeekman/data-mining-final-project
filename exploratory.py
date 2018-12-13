@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
 
 rides = pd.read_csv("trip.csv", error_bad_lines=False)
 rides['Date'] = rides['starttime'].apply(lambda x: datetime.strptime(x.split(' ')[0], "%m/%d/%Y"))
@@ -158,8 +161,50 @@ ax2.legend(loc='upper right')
 plt.show()
 '''
 
+# create a model to predict Mean Temperature so I can remove the seasonality
+x_days = np.array([x.timetuple().tm_yday for x in weather['Date']]).reshape(-1,1)
+y_weather = weather['Mean_Temperature_F'].reshape(-1,1)
+model = make_pipeline(PolynomialFeatures(degree=3), LinearRegression(n_jobs=-1))
+print("Fitting")
+model.fit(x_days, y_weather)
+print("Predicting")
+predicted_temps = model.predict(x_days)
+
+# print("Plotting")
+# plt.plot(x_days, y_weather, label="Actual Temps", c='g')
+# plt.plot(x_days, predicted_temps, label="Predicted", c='r')
+# plt.title("Predicted Seasonality of the Average Temperatures")
+# plt.xlabel("Day of year")
+# plt.ylabel("Temperature (F)")
+# plt.legend()
+# plt.show()
+
+weather['Mean_temp_no_seasonality'] = np.array(y_weather) - np.array(predicted_temps)
+weather.to_csv("weather_no_seasonality.csv")
+
+# Trip duration with Temperature
+# fields: 'Mean_Temperature_F', 'Min_TemperatureF', 'Mean_Humidity',
+#         'Mean_Wind_Speed_MPH', 'Precipitation_In'
+duration = rides.groupby('Date')['tripduration'].sum()
+temp = weather.groupby('Date')['Mean_temp_no_seasonality'].first()
+
+fig, ax1 = plt.subplots()
+plt.title("Trip Duration vs No Seasonality Mean Temperature")
+
+ax1.plot(duration.index, duration.values, 'b', label="Trip Duration")
+ax1.set_ylabel('Trip Duration total (seconds)')
+
+ax2 = ax1.twinx()
+ax2.plot(temp.index, temp.values, 'g', label="Temperature", alpha=.8)
+ax2.set_ylabel('Temperature')
+
+fig.tight_layout()
+ax1.legend(loc='upper left')
+ax2.legend(loc='upper right')
+plt.show()
+
 # correlation of weather attributes with Trip Duration
-attributes = ['Mean_Temperature_F', 'Min_TemperatureF', 'Mean_Humidity', 'Mean_Wind_Speed_MPH', 'Precipitation_In']
+attributes = ['Mean_Temperature_F', 'Min_TemperatureF', 'Mean_Humidity', 'Mean_Wind_Speed_MPH', 'Precipitation_In', 'Mean_temp_no_seasonality']
 duration = rides.groupby('Date')['tripduration'].sum()
 for attr in attributes:
     weather_attr = weather.groupby('Date')[attr].first()
